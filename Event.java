@@ -23,9 +23,14 @@ public class Event {
         this.eventType = eventType;
     }
 
+    
     // setters and getters
     public String getEventID() {
         return eventID;
+    }
+
+    public void setEventID(String eventID) {
+        this.eventID = eventID;
     }
 
     public String getEventName() {
