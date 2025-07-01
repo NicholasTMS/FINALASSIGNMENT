@@ -30,7 +30,8 @@ public class Database {
                 datetime TEXT NOT NULL,
                 capacity INTEGER NOT NULL,
                 registrationFee REAL NOT NULL,
-                eventType TEXT NOT NULL
+                eventType TEXT NOT NULL,
+                picture BLOB
             );
         """;
 

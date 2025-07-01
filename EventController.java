@@ -23,11 +23,13 @@ public class EventController {
         double fee,
         EventType type,
         EnumMap<AdditionalServices, Double> services,
-        EnumMap<DiscountType, Double> discounts
+        EnumMap<DiscountType, Double> discounts,
+        byte[] pictureData 
     ) {
         model = new Event(name, venue, date, capacity, fee, type);
         model.setAvailableAdditionalServices(services);
         model.setAvailableDiscounts(discounts);
+        model.setPictureData(pictureData);
 
         try {
             dao.insert(model);
