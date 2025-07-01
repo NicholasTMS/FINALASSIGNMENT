@@ -4,15 +4,15 @@ import java.util.EnumMap;
 public class EventDAO {
     private static final String URL = "jdbc:sqlite:Database.db";
 
-    /** Inserts the Event and its services & discounts, and populates eventID */
+    // Inserts the Event and its services & discounts, and populates eventID 
     public void insert(Event e) throws SQLException {
         try (Connection conn = DriverManager.getConnection(URL)) {
             conn.setAutoCommit(false);
 
-            // 1) Insert into Event and get the generated id
+            // Insert into Event and get the generated id
             String sqlEvent = """
-                INSERT INTO Event(name, venue, datetime, capacity, registrationFee, eventType)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO Event(name, venue, datetime, capacity, registrationFee, eventType, picture)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             """;
             try (PreparedStatement ps = conn.prepareStatement(sqlEvent, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, e.getEventName());
@@ -21,6 +21,7 @@ public class EventDAO {
                 ps.setInt(4, e.getCapacity());
                 ps.setDouble(5, e.getRegisterationFee());
                 ps.setString(6, e.getEventType().name());
+                ps.setBytes(7, e.getPictureData());
                 ps.executeUpdate();
 
                 ResultSet keys = ps.getGeneratedKeys();
@@ -29,7 +30,7 @@ public class EventDAO {
                 e.setEventID(String.valueOf(id));  // set the eventID
             }
 
-            // 2) Insert each additional service
+            // Insert each additional service
             String sqlService = """
                 INSERT INTO EventAdditionalServices(event_id, service, cost)
                 VALUES (?, ?, ?)
@@ -45,7 +46,7 @@ public class EventDAO {
                 ps.executeBatch();
             }
 
-            // 3) Insert each discount
+            // Insert each discount
             String sqlDiscount = """
                 INSERT INTO EventDiscounts(event_id, discountType, value)
                 VALUES (?, ?, ?)
@@ -60,8 +61,8 @@ public class EventDAO {
                 }
                 ps.executeBatch();
             }
-
             conn.commit();
+            System.out.println("Successful insertion to database");
         }
     }
 }

@@ -7,6 +7,7 @@ public class Event {
     private String venue;
     private LocalDateTime date; // uses yyyy-MM-ddTHH:mm:ss format // 2025-06-27T14:30:00 // T is just a separator char to separate date adn time
     private int capacity;
+    private byte[] pictureData;
     //private int totalRegistered; // not sure if this needed, check with registration class
     private double registerationFee;
     private EventType eventType;
@@ -79,6 +80,15 @@ public class Event {
 
     public void setEventType(EventType eventType) {
         this.eventType = eventType;
+    }
+
+    public byte[] getPictureData() {
+        return pictureData;
+    }
+
+   
+    public void setPictureData(byte[] pictureData) {
+        this.pictureData = pictureData;
     }
 
     // ----- additional services -----
