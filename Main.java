@@ -5,8 +5,6 @@ public class Main {
         Database.initialize(); // one time command to create tables if they dont exists
         SwingUtilities.invokeLater(() -> {
             EventController controller = new EventController();
-            EventFormUI view = new EventFormUI(controller);
-            view.setVisible(true);
         });
     }
 }

@@ -33,7 +33,8 @@ public class Database {
                 totalRegistered INTEGER NOT NULL,
                 registrationFee REAL NOT NULL,
                 eventType TEXT NOT NULL,
-                picture BLOB
+                picture BLOB,
+                organiser TEXT NOT NULL
             );
         """;
 
