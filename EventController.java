@@ -1,25 +1,28 @@
 import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.List;
+import java.util.*;
 
-public class EventController {
+public class EventController implements Subject {
     private Event model;
     private final EventDAO dao = new EventDAO();
+    private final List<Observer> observers = new ArrayList<>();
 
-    private final List<EventObserver> listeners = new ArrayList<>();
+    // Subject methods
+    @Override
+    public void registerObserver(Observer o) {
+        observers.add(o);
+    }
 
-    /** UI classes call this to register for changes */
-    public void addListener(EventObserver l) {
-        listeners.add(l);
+    @Override
+    public void removeObserver(Observer o) {
+        observers.remove(o);
     }
-    public void removeListener(EventObserver l) {
-        listeners.remove(l);
-    }
-    private void fireChange() {
-        for (var l : listeners) l.onEventsChanged();
+
+    @Override
+    public void notifyObservers() {
+        for (Observer o : observers) {
+            o.update();
+        }
     }
 
     public Event getModel() {
@@ -44,7 +47,8 @@ public class EventController {
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
-        fireChange();
+
+        notifyObservers(); // notify UI
     }
 
     public void updateEvent(
@@ -67,7 +71,8 @@ public class EventController {
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
-        fireChange();
+
+        notifyObservers();
     }
 
     public void deleteEvent(String id) {
@@ -76,7 +81,8 @@ public class EventController {
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
-        fireChange();
+
+        notifyObservers();
     }
 
     public List<Event> loadAllEvents() {
@@ -88,6 +94,7 @@ public class EventController {
         }
     }
 }
+
 
 
 

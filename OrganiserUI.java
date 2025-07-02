@@ -4,7 +4,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
 
-public class OrganiserUI extends JFrame {
+public class OrganiserUI extends JFrame implements Observer{
     private final Organiser organiser;
     private final EventController controller = new EventController();
     private final CardLayout cardLayout = new CardLayout();
@@ -23,7 +23,7 @@ public class OrganiserUI extends JFrame {
         // Event form panel (create / update)
         createUpdatePanel = new EventFormPanelUI(controller);
 
-        controller.addListener(this::refreshGrid);
+        controller.registerObserver(this);
 
         // Top navigation bar
         JPanel navBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
@@ -68,6 +68,10 @@ public class OrganiserUI extends JFrame {
         setVisible(true);
     }
 
+    @Override
+    public void update() {
+        refreshGrid();
+    }
     /** (Re)builds the “View / Modify” page from fresh DB data. */
     private void buildViewModifyPage() {
         viewModifyPage.removeAll();
@@ -150,7 +154,6 @@ public class OrganiserUI extends JFrame {
                 );
                 if (ans == JOptionPane.YES_OPTION) {
                     controller.deleteEvent(event.getEventID());
-                    refreshGrid();
                 }
             });
 
