@@ -1,3 +1,4 @@
+// EventFormPanelUI.java
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -11,19 +12,22 @@ import java.util.EnumMap;
 public class EventFormPanelUI extends JPanel {
     private final EventController controller;
 
+    // form fields
     private JTextField nameField, venueField, dateField, timeField, capacityField, feeField;
     private JComboBox<EventType> typeCombo;
     private JButton uploadButton;
     private JLabel pictureLabel;
     private byte[] uploadedPictureData;
 
+    // extra panels
     private EnumMap<AdditionalServices, JCheckBox> serviceChecks = new EnumMap<>(AdditionalServices.class);
     private EnumMap<AdditionalServices, JTextField> serviceCostFields = new EnumMap<>(AdditionalServices.class);
-
     private EnumMap<DiscountType, JCheckBox> discountChecks = new EnumMap<>(DiscountType.class);
     private EnumMap<DiscountType, JTextField> discountAmountFields = new EnumMap<>(DiscountType.class);
 
+    // output & state
     private JTextArea outputArea;
+    private Event  editingEvent;    // null = create new, non-null = editing
 
     public EventFormPanelUI(EventController controller) {
         this.controller = controller;
@@ -88,9 +92,9 @@ public class EventFormPanelUI extends JPanel {
             discountPanel.add(tf);
         }
 
-        // --- Create button & output ---
-        JButton createBtn = new JButton("Create Event");
-        createBtn.addActionListener(this::onCreate);
+        // --- Create/Update button & output ---
+        JButton createBtn = new JButton("Create/Update Event");
+        createBtn.addActionListener(this::onUpdateCreate);
         outputArea = new JTextArea(5, 40);
         outputArea.setEditable(false);
         JScrollPane outputScroll = new JScrollPane(outputArea);
@@ -128,7 +132,7 @@ public class EventFormPanelUI extends JPanel {
         }
     }
 
-    private void onCreate(ActionEvent e) {
+    private void onUpdateCreate(ActionEvent e) {
         try {
             String name      = nameField.getText().trim();
             String venue     = venueField.getText().trim();
@@ -139,39 +143,36 @@ public class EventFormPanelUI extends JPanel {
             double fee       = Double.parseDouble(feeField.getText().trim());
             EventType type   = (EventType) typeCombo.getSelectedItem();
 
+            // collect services
             EnumMap<AdditionalServices, Double> services = new EnumMap<>(AdditionalServices.class);
             for (AdditionalServices s : serviceChecks.keySet())
                 if (serviceChecks.get(s).isSelected())
                     services.put(s, Double.parseDouble(serviceCostFields.get(s).getText().trim()));
 
+            // collect discounts
             EnumMap<DiscountType, Double> discounts = new EnumMap<>(DiscountType.class);
             for (DiscountType d : discountChecks.keySet())
                 if (discountChecks.get(d).isSelected())
                     discounts.put(d, Double.parseDouble(discountAmountFields.get(d).getText().trim()));
 
-            controller.createEvent(
-                name, venue, dt, capacity, fee, type,
-                services, discounts, uploadedPictureData
-            );
+            if (editingEvent == null) {
+                // create new
+                controller.createEvent(
+                  name, venue, dt, capacity, fee, type,
+                  services, discounts, uploadedPictureData
+                );
+            } else {
+                // update existing
+                controller.updateEvent(
+                  editingEvent.getEventID(),
+                  name, venue, dt, capacity, fee, type,
+                  services, discounts, uploadedPictureData
+                );
+            }
 
             Event ev = controller.getModel();
-            StringBuilder sb = new StringBuilder("✅ Event Created:\n")
-                .append("Name: ").append(ev.getEventName()).append("\n")
-                .append("Type: ").append(ev.getEventType()).append("\n")
-                .append("Date: ").append(ev.getDate()).append("\n")
-                .append("Capacity: ").append(ev.getCapacity()).append("\n")
-                .append("Base Fee: RM").append(ev.getRegisterationFee()).append("\n\n");
-            if (!ev.getAvailableAdditionalServices().isEmpty()) {
-                sb.append("Additional Services:\n");
-                ev.getAvailableAdditionalServices()
-                  .forEach((s,c)-> sb.append(" • ").append(s).append(": RM").append(c).append("\n"));
-            }
-            if (!ev.getAvailableDiscounts().isEmpty()) {
-                sb.append("\nDiscounts:\n");
-                ev.getAvailableDiscounts()
-                  .forEach((d,v)-> sb.append(" • ").append(d).append(": -RM").append(v).append("\n"));
-            }
-            outputArea.setText(sb.toString());
+            displaySummary(ev);
+            clearForm();
 
         } catch (DateTimeParseException ex) {
             outputArea.setText("❌ Invalid date format. Use yyyy-MM-dd and HH:mm");
@@ -181,8 +182,69 @@ public class EventFormPanelUI extends JPanel {
             outputArea.setText("❌ Error: " + ex.getMessage());
         }
     }
+
+    private void displaySummary(Event ev) {
+        StringBuilder sb = new StringBuilder("✅ Saved:\n")
+            .append("Name: ").append(ev.getEventName()).append("\n")
+            .append("Type: ").append(ev.getEventType()).append("\n")
+            .append("Date: ").append(ev.getDate()).append("\n")
+            .append("Capacity: ").append(ev.getCapacity()).append("\n")
+            .append("Base Fee: RM").append(ev.getRegisterationFee()).append("\n\n");
+
+        if (!ev.getAvailableAdditionalServices().isEmpty()) {
+            sb.append("Additional Services:\n");
+            ev.getAvailableAdditionalServices().forEach((s,c)->
+              sb.append(" • ").append(s).append(": RM").append(c).append("\n"));
+        }
+        if (!ev.getAvailableDiscounts().isEmpty()) {
+            sb.append("\nDiscounts:\n");
+            ev.getAvailableDiscounts().forEach((d,v)->
+              sb.append(" • ").append(d).append(": -RM").append(v).append("\n"));
+        }
+        outputArea.setText(sb.toString());
+    }
+
+    private void clearForm() {
+        editingEvent = null;
+        nameField.setText(""); venueField.setText("");
+        dateField.setText(""); timeField.setText("");
+        capacityField.setText(""); feeField.setText("");
+        typeCombo.setSelectedIndex(0);
+        pictureLabel.setIcon(null);
+        uploadedPictureData = null;
+        serviceChecks.forEach((s,cb)->{ cb.setSelected(false); serviceCostFields.get(s).setText("0.0"); });
+        discountChecks.forEach((d,cb)->{ cb.setSelected(false); discountAmountFields.get(d).setText("0.0"); });
+    }
+
+    /** Call this to load an existing event into the form for editing */
+    public void loadEventForEdit(Event e) {
+        editingEvent = e;
+        nameField.setText(e.getEventName());
+        venueField.setText(e.getVenue());
+        dateField.setText(e.getDate().toLocalDate().toString());
+        timeField.setText(e.getDate().toLocalTime().toString());
+        capacityField.setText(String.valueOf(e.getCapacity()));
+        feeField.setText(String.valueOf(e.getRegisterationFee()));
+        typeCombo.setSelectedItem(e.getEventType());
+
+        if (e.getPictureData() != null) {
+            uploadedPictureData = e.getPictureData();
+            ImageIcon icon = new ImageIcon(
+              new ImageIcon(uploadedPictureData)
+                .getImage().getScaledInstance(100,100,Image.SCALE_SMOOTH)
+            );
+            pictureLabel.setIcon(icon);
+        }
+
+        e.getAvailableAdditionalServices().forEach((s,c)-> {
+            serviceChecks.get(s).setSelected(true);
+            serviceCostFields.get(s).setText(String.valueOf(c));
+        });
+        e.getAvailableDiscounts().forEach((d,v)-> {
+            discountChecks.get(d).setSelected(true);
+            discountAmountFields.get(d).setText(String.valueOf(v));
+        });
+
+        outputArea.setText("✏️ Editing “" + e.getEventName() + "”\nMake changes and click Create/Update.");
+    }
 }
-
-
-
-

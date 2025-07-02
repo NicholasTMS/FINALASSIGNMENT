@@ -26,6 +26,7 @@ public class Event {
         this.totalRegistered = 0;
     }
 
+
     
     // setters and getters
     public String getEventID() {
