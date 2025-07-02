@@ -11,17 +11,18 @@ public class EventDAO {
 
             // Insert into Event and get the generated id
             String sqlEvent = """
-                INSERT INTO Event(name, venue, datetime, capacity, registrationFee, eventType, picture)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO Event(name, venue, datetime, capacity, totalRegistered, registrationFee, eventType, picture)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """;
             try (PreparedStatement ps = conn.prepareStatement(sqlEvent, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, e.getEventName());
                 ps.setString(2, e.getVenue());
                 ps.setString(3, e.getDate().toString());           // ISO format
                 ps.setInt(4, e.getCapacity());
-                ps.setDouble(5, e.getRegisterationFee());
-                ps.setString(6, e.getEventType().name());
-                ps.setBytes(7, e.getPictureData());
+                ps.setInt(5, e.getTotalRegistered());
+                ps.setDouble(6, e.getRegisterationFee());
+                ps.setString(7, e.getEventType().name());
+                ps.setBytes(8, e.getPictureData());
                 ps.executeUpdate();
 
                 ResultSet keys = ps.getGeneratedKeys();
