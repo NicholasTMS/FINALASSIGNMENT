@@ -1,5 +1,5 @@
 // EventChangeListener.java
-public interface EventObserver {
+public interface Observer {
     /** Called whenever the set of persisted events has changed. */
-    void onEventsChanged();
+    void update();
 }
