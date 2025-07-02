@@ -5,94 +5,96 @@ import java.awt.event.MouseEvent;
 import java.util.List;
 
 public class OrganiserUI extends JFrame {
-    private Organiser organiser;
-    private EventController controller = new EventController(); // or inject your DAO
-    private CardLayout cardLayout = new CardLayout();
-    private JPanel    cards      = new JPanel(cardLayout);
-    private EventFormPanelUI createPanel;
+    private final Organiser organiser;
+    private final EventController controller = new EventController();
+    private final CardLayout cardLayout = new CardLayout();
+    private final JPanel cards = new JPanel(cardLayout);
+    private final EventFormPanelUI createUpdatePanel;
+    private final JPanel viewModifyPage;
 
     public OrganiserUI(Organiser organiser) {
+        this.organiser = organiser;
         setTitle("Organiser");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(1200, 800);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
-        
-        // current logged in user
-        this.organiser = organiser;
-        // set event form panel
-        createPanel = new EventFormPanelUI(this.controller);
 
-        // Build navBar with buttons
+        // Event form panel (create / update)
+        createUpdatePanel = new EventFormPanelUI(controller);
+
+        controller.addListener(this::refreshGrid);
+
+        // Top navigation bar
         JPanel navBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
         navBar.setBackground(new Color(0, 102, 204));
-
-
-        JButton btnCreate     = new JButton("Create Event");
-        JButton btnUpdate     = new JButton("Update Event");
-        JButton btnDelete     = new JButton("Delete Event");
-        JButton btnNotify     = new JButton("Notifications");
-
+        JButton btnCreate = new JButton("Create Event");
+        JButton btnView   = new JButton("View/Modify Events");
+        JButton btnNotify = new JButton("Notifications");
         navBar.add(btnCreate);
-        navBar.add(btnUpdate);
-        navBar.add(btnDelete);
+        navBar.add(btnView);
         navBar.add(btnNotify);
-
         add(navBar, BorderLayout.NORTH);
 
-        // Create each page as its own panel
-        // create page panel styling
-        JPanel createPage = new JPanel(new BorderLayout()); 
-        JLabel header = new JLabel("Create Event Form", SwingConstants.CENTER);
-        header.setFont(header.getFont().deriveFont(Font.BOLD, 24f));createPage.add(createPanel); 
-        createPage.add(header,      BorderLayout.NORTH);
-        createPage.add(createPanel, BorderLayout.CENTER);
-        
-        
-        // Update page styling
-        JPanel updatePage = new JPanel(new BorderLayout());
-        JLabel updHeader = new JLabel("Update Events", SwingConstants.CENTER);
-        updHeader.setFont(updHeader.getFont().deriveFont(Font.BOLD, 20f));
-        updatePage.add(updHeader, BorderLayout.NORTH);
-        updatePage.add(createScrollableEventGrid(), BorderLayout.CENTER);
-                           
+        // Build create/update page
+        JPanel createUpdatePage = new JPanel(new BorderLayout());
+        JLabel header = new JLabel("Create / Update Event", SwingConstants.CENTER);
+        header.setFont(header.getFont().deriveFont(Font.BOLD, 24f));
+        createUpdatePage.add(header, BorderLayout.NORTH);
+        createUpdatePage.add(createUpdatePanel, BorderLayout.CENTER);
 
+        // Build view/modify page once
+        viewModifyPage = new JPanel(new BorderLayout());
+        buildViewModifyPage();
 
-        // othe rpage styling
-        JPanel deletePage       = new JPanel();                   deletePage.add(new JLabel("Delete Event Page"));
-        JPanel notificationsPage= new JPanel();                   notificationsPage.add(new JLabel("Notifications Page"));
+        // Notifications page placeholder
+        JPanel notificationsPage = new JPanel();
+        notificationsPage.add(new JLabel("Notifications Page"));
 
-        // Add them to the 'cards' container with a key
-        cards.add(createPage,        "CREATE");
-        cards.add(updatePage,        "UPDATE");
-        cards.add(deletePage,        "DELETE");
-        cards.add(notificationsPage, "NOTIFY");
-
+        // Add pages to card deck
+        cards.add(createUpdatePage, "CREATE_UPDATE");
+        cards.add(viewModifyPage,   "VIEW_MODIFY");
+        cards.add(notificationsPage,"NOTIFY");
         add(cards, BorderLayout.CENTER);
 
-        // Hook up buttons to flip the cards
-        btnCreate    .addActionListener(e -> cardLayout.show(cards, "CREATE"));
-        btnUpdate    .addActionListener(e -> cardLayout.show(cards, "UPDATE"));
-        btnDelete    .addActionListener(e -> cardLayout.show(cards, "DELETE"));
-        btnNotify    .addActionListener(e -> cardLayout.show(cards, "NOTIFY"));
+        // Button actions to switch cards
+        btnCreate.addActionListener(e -> cardLayout.show(cards, "CREATE_UPDATE"));
+        btnView  .addActionListener(e -> cardLayout.show(cards, "VIEW_MODIFY"));
+        btnNotify.addActionListener(e -> cardLayout.show(cards, "NOTIFY"));
 
-        // Show the default page
-        cardLayout.show(cards, "UPDATE");
+        // Show default
+        cardLayout.show(cards, "VIEW_MODIFY");
 
         setVisible(true);
     }
-    
+
+    /** (Re)builds the “View / Modify” page from fresh DB data. */
+    private void buildViewModifyPage() {
+        viewModifyPage.removeAll();
+
+        JLabel updHeader = new JLabel("View / Modify Events", SwingConstants.CENTER);
+        updHeader.setFont(updHeader.getFont().deriveFont(Font.BOLD, 20f));
+        viewModifyPage.add(updHeader, BorderLayout.NORTH);
+        viewModifyPage.add(createScrollableEventGrid(), BorderLayout.CENTER);
+
+        viewModifyPage.revalidate();
+        viewModifyPage.repaint();
+    }
+
+    /** Refreshes the grid after a change, then shows the view/modify card. */
+    private void refreshGrid() {
+        buildViewModifyPage();
+        cardLayout.show(cards, "VIEW_MODIFY");
+    }
 
     private JScrollPane createScrollableEventGrid() {
         List<Event> events = controller.loadAllEvents();
-
-        // Use FlowLayout so cards keep their preferred size
         JPanel grid = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
         grid.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
 
         for (Event ev : events) {
             EventCard card = new EventCard(ev);
-            card.setPreferredSize(new Dimension(200,200));
+            card.setPreferredSize(new Dimension(200, 240));
             grid.add(card);
         }
 
@@ -101,20 +103,15 @@ public class OrganiserUI extends JFrame {
         return scroll;
     }
 
-
-
-    /**
-     * Inner class: a single “card” showing picture + name, clickable to show details.
-     */
     private class EventCard extends JPanel {
         EventCard(Event event) {
             setLayout(new BorderLayout(5,5));
             setBorder(BorderFactory.createLineBorder(Color.GRAY));
-            setPreferredSize(new Dimension(20, 40));
+            setPreferredSize(new Dimension(200, 240));
 
             // Thumbnail
-            byte[] img = event.getPictureData();
             JLabel pic = new JLabel();
+            byte[] img = event.getPictureData();
             if (img != null) {
                 ImageIcon ico = new ImageIcon(
                   new ImageIcon(img)
@@ -123,13 +120,41 @@ public class OrganiserUI extends JFrame {
                 );
                 pic.setIcon(ico);
             }
-            add(pic, BorderLayout.CENTER);
+            add(pic, BorderLayout.NORTH);
 
             // Name
             JLabel name = new JLabel(event.getEventName(), SwingConstants.CENTER);
-            add(name, BorderLayout.SOUTH);
+            add(name, BorderLayout.CENTER);
 
-            // Click listener
+            // Buttons panel
+            JPanel buttonBar = new JPanel(new GridLayout(1,2,5,0));
+            JButton btnUpd = new JButton("Update");
+            JButton btnDel = new JButton("Delete");
+            buttonBar.add(btnUpd);
+            buttonBar.add(btnDel);
+            add(buttonBar, BorderLayout.SOUTH);
+
+            // Update action: load into form, switch to create/update card
+            btnUpd.addActionListener(e -> {
+                createUpdatePanel.loadEventForEdit(event);
+                cardLayout.show(cards, "CREATE_UPDATE");
+            });
+
+            // Delete action: confirm, delete, then refresh view
+            btnDel.addActionListener(e -> {
+                int ans = JOptionPane.showConfirmDialog(
+                  OrganiserUI.this,
+                  "Delete “" + event.getEventName() + "”?",
+                  "Confirm delete",
+                  JOptionPane.YES_NO_OPTION
+                );
+                if (ans == JOptionPane.YES_OPTION) {
+                    controller.deleteEvent(event.getEventID());
+                    refreshGrid();
+                }
+            });
+
+            // Clicking the card body shows details
             addMouseListener(new MouseAdapter() {
                 @Override public void mouseClicked(MouseEvent e) {
                     showEventDetails(event);
@@ -138,27 +163,45 @@ public class OrganiserUI extends JFrame {
         }
     }
 
-    /** Pops up a dialog showing more info about this event. */
     private void showEventDetails(Event e) {
-        String message =
-            "Name: " + e.getEventName() + "\n" +
-            "Venue: " + e.getVenue() + "\n" +
-            "DateTime:  " + e.getDate() + "\n" +
-            "Fee:   RM" + e.getRegisterationFee();
+        StringBuilder sb = new StringBuilder()
+            .append("Event ID: ").append(e.getEventID()).append("\n")
+            .append("Name: ").append(e.getEventName()).append("\n")
+            .append("Venue: ").append(e.getVenue()).append("\n")
+            .append("Date‑Time: ").append(e.getDate()).append("\n")
+            .append("Capacity: ").append(e.getCapacity()).append("\n")
+            .append("Registered: ").append(e.getTotalRegistered()).append("\n")
+            .append("Base Fee: RM").append(e.getRegisterationFee()).append("\n\n")
+            .append("Type: ").append(e.getEventType()).append("\n\n");
+
+        if (!e.getAvailableAdditionalServices().isEmpty()) {
+            sb.append("Additional Services:\n");
+            e.getAvailableAdditionalServices().forEach((s, c) ->
+              sb.append(" • ").append(s).append(": RM").append(c).append("\n")
+            );
+            sb.append("\n");
+        }
+        if (!e.getAvailableDiscounts().isEmpty()) {
+            sb.append("Discounts:\n");
+            e.getAvailableDiscounts().forEach((d,v) ->
+              sb.append(" • ").append(d).append(": -RM").append(v).append("\n")
+            );
+        }
+
         JOptionPane.showMessageDialog(
-            this,
-            message,
-            "Details for “" + e.getEventName() + "”",
-            JOptionPane.INFORMATION_MESSAGE
+          this, sb.toString(),
+          "Details for “" + e.getEventName() + "”",
+          JOptionPane.INFORMATION_MESSAGE
         );
     }
 
     public static void main(String[] args) {
-    SwingUtilities.invokeLater(() -> {
-        Organiser guest = new Organiser("OrganiserGuest","Organiser");  
-        new OrganiserUI(guest);
-    });
+        SwingUtilities.invokeLater(() -> {
+            Organiser guest = new Organiser("OrganiserGuest","Organiser");
+            new OrganiserUI(guest);
+        });
+    }
 }
-}
+
 
 
