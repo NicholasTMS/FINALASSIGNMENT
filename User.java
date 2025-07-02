@@ -4,9 +4,9 @@ public class User {
     private String hashedPassword;
     private String role;
 
-    public User(String username, String hashedPassword, String role) {
+    public User(String username, String Password, String role) {
         this.username = username;
-        this.hashedPassword = hashedPassword;
+        this.hashedPassword = PasswordUtil.hashPassword(Password);
         this.role = role;
     }
 
@@ -21,9 +21,10 @@ public class User {
     public String getRole() {
         return role;
     }
+    
+    public void setPassword(String newPassword) {
 
-    public void setPassword(String newHashedPassword) {
-        this.hashedPassword = newHashedPassword;
+        this.hashedPassword = PasswordUtil.hashPassword(newPassword);
     }
 
     public void setRole(String newRole) {

@@ -15,8 +15,8 @@ public class EventDAO {
             // 1) Insert main record
             String sqlEvent = """
                 INSERT INTO Event(name, venue, datetime, capacity, totalRegistered,
-                                  registrationFee, eventType, picture)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                                  registrationFee, eventType, picture, organiser)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
             try (PreparedStatement ps = conn.prepareStatement(sqlEvent, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, e.getEventName());
@@ -27,6 +27,7 @@ public class EventDAO {
                 ps.setDouble(6, e.getRegisterationFee());
                 ps.setString(7, e.getEventType().name());
                 ps.setBytes(8, e.getPictureData());
+                ps.setString(9, e.getOrganiser());
                 ps.executeUpdate();
 
                 try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -149,7 +150,7 @@ public class EventDAO {
         List<Event> events = new ArrayList<>();
         String mainSql = """
             SELECT id, name, venue, datetime, capacity,
-                   totalRegistered, registrationFee, eventType, picture
+                   totalRegistered, registrationFee, eventType, picture, organiser
               FROM Event
         """;
 
@@ -170,7 +171,7 @@ public class EventDAO {
                 e.setEventID(String.valueOf(id));
                 e.setTotalRegistered(rs.getInt("totalRegistered"));
                 e.setPictureData(rs.getBytes("picture"));
-
+                e.setOrganiser(rs.getString("organiser"));
                 // populate maps
                 e.setAvailableAdditionalServices(loadServicesForEvent(id, conn));
                 e.setAvailableDiscounts     (loadDiscountsForEvent(id, conn));
@@ -181,7 +182,49 @@ public class EventDAO {
         return events;
     }
 
-    //----
+    public List<Event> loadAllEventsForOrganiser(String organiser) throws SQLException {
+        List<Event> events = new ArrayList<>();
+        String mainSql = """
+            SELECT id, name, venue, datetime, capacity,
+                totalRegistered, registrationFee, eventType, picture, organiser
+            FROM Event WHERE organiser = ?
+        """;
+
+        try (Connection conn = DriverManager.getConnection(URL);
+            PreparedStatement ps = conn.prepareStatement(mainSql)) {
+
+            // bind the organiser username to the query
+            ps.setString(1, organiser);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int id = rs.getInt("id");
+                    Event e = new Event(
+                    rs.getString("name"),
+                    rs.getString("venue"),
+                    LocalDateTime.parse(rs.getString("datetime")),
+                    rs.getInt("capacity"),
+                    rs.getDouble("registrationFee"),
+                    EventType.valueOf(rs.getString("eventType"))
+                    );
+                    e.setEventID(String.valueOf(id));
+                    e.setTotalRegistered(rs.getInt("totalRegistered"));
+                    e.setPictureData(rs.getBytes("picture"));
+                    e.setOrganiser(rs.getString("organiser"));
+
+                    // Load related maps
+                    e.setAvailableAdditionalServices(loadServicesForEvent(id, conn));
+                    e.setAvailableDiscounts(loadDiscountsForEvent(id, conn));
+
+                    events.add(e);
+                }
+            }
+        }
+        return events;
+    }
+
+
+    //----helper for laoding servies and discounts
 
     private EnumMap<AdditionalServices, Double> loadServicesForEvent(int eventId, Connection conn)
             throws SQLException {

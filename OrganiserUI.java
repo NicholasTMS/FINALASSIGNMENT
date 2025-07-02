@@ -5,14 +5,15 @@ import java.awt.event.MouseEvent;
 import java.util.List;
 
 public class OrganiserUI extends JFrame implements Observer{
-    private final Organiser organiser;
+    private final User organiser;
     private final EventController controller = new EventController();
     private final CardLayout cardLayout = new CardLayout();
     private final JPanel cards = new JPanel(cardLayout);
     private final EventFormPanelUI createUpdatePanel;
     private final JPanel viewModifyPage;
 
-    public OrganiserUI(Organiser organiser) {
+
+    public OrganiserUI(User organiser) {
         this.organiser = organiser;
         setTitle("Organiser");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -21,19 +22,38 @@ public class OrganiserUI extends JFrame implements Observer{
         setLayout(new BorderLayout());
 
         // Event form panel (create / update)
-        createUpdatePanel = new EventFormPanelUI(controller);
+        createUpdatePanel = new EventFormPanelUI(controller, this.organiser);
 
         controller.registerObserver(this);
 
         // Top navigation bar
-        JPanel navBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        JPanel navBar = new JPanel(new BorderLayout());
         navBar.setBackground(new Color(0, 102, 204));
+
+        // Left panel for main nav buttons
+        JPanel leftNav = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        leftNav.setOpaque(false);  // Inherit background
         JButton btnCreate = new JButton("Create Event");
         JButton btnView   = new JButton("View/Modify Events");
         JButton btnNotify = new JButton("Notifications");
-        navBar.add(btnCreate);
-        navBar.add(btnView);
-        navBar.add(btnNotify);
+        leftNav.add(btnCreate);
+        leftNav.add(btnView);
+        leftNav.add(btnNotify);
+
+        // Right panel for logout button
+        JPanel rightNav = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        rightNav.setOpaque(false);
+        JButton btnLogout = new JButton("Logout");
+        rightNav.add(btnLogout);
+        btnLogout.addActionListener(e -> {
+            OrganiserUI.this.dispose();
+            new LoginGUI();
+        });
+
+
+        // Add both to the nav bar
+        navBar.add(leftNav, BorderLayout.WEST);
+        navBar.add(rightNav, BorderLayout.EAST);
         add(navBar, BorderLayout.NORTH);
 
         // Build create/update page
@@ -92,7 +112,7 @@ public class OrganiserUI extends JFrame implements Observer{
     }
 
     private JScrollPane createScrollableEventGrid() {
-        List<Event> events = controller.loadAllEvents();
+        List<Event> events = controller.loadAllEventsForOrganiser(organiser.getUsername());
         JPanel grid = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
         grid.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
 
@@ -174,8 +194,9 @@ public class OrganiserUI extends JFrame implements Observer{
             .append("Date‑Time: ").append(e.getDate()).append("\n")
             .append("Capacity: ").append(e.getCapacity()).append("\n")
             .append("Registered: ").append(e.getTotalRegistered()).append("\n")
-            .append("Base Fee: RM").append(e.getRegisterationFee()).append("\n\n")
-            .append("Type: ").append(e.getEventType()).append("\n\n");
+            .append("Base Fee: RM").append(e.getRegisterationFee()).append("\n")
+            .append("Type: ").append(e.getEventType()).append("\n")
+            .append("Organiser: ").append(e.getOrganiser()).append("\n");
 
         if (!e.getAvailableAdditionalServices().isEmpty()) {
             sb.append("Additional Services:\n");
@@ -198,9 +219,11 @@ public class OrganiserUI extends JFrame implements Observer{
         );
     }
 
+    
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            Organiser guest = new Organiser("OrganiserGuest","Organiser");
+            User guest = new User("OrganiserGuest","1234","Organiser");
             new OrganiserUI(guest);
         });
     }

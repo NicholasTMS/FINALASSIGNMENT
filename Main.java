@@ -4,8 +4,7 @@ public class Main {
     public static void main(String[] args) {
         Database.initialize(); // one time command to create tables if they dont exists
         SwingUtilities.invokeLater(() -> {
-            Organiser guest = new Organiser("OrganiserGuest","Organiser");  
-            new OrganiserUI(guest);
+            new LoginGUI();
         });
     }
 }

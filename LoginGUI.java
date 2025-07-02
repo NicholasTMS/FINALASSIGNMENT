@@ -44,13 +44,13 @@ public class LoginGUI {
                 frame.dispose();
                 switch (role.toLowerCase()) {
                     case "admin":
-                        showAdminDashboard(uname);
+                        showAdminDashboard(uname, "Admin", pass);
                         break;
                     case "participant":
-                        showParticipantDashboard(uname);
+                        showParticipantDashboard(uname, "Participant", pass);
                         break;
-                    case "organizer":
-                        showOrganizerDashboard(uname);
+                    case "organiser":
+                        showOrganiserDashboard(uname, "Organiser", pass);
                         break;
                     default:
                         JOptionPane.showMessageDialog(frame, "Unknown role.");
@@ -63,7 +63,7 @@ public class LoginGUI {
         frame.setVisible(true);
     }
 
-    private void showAdminDashboard(String adminUsername) {
+    private void showAdminDashboard(String adminUsername, String role, String Password) {
         JFrame frame = new JFrame("Admin Dashboard - " + adminUsername);
         frame.setSize(400, 300);
         frame.setLayout(null);
@@ -87,7 +87,7 @@ public class LoginGUI {
         createUserBtn.addActionListener(e -> {
             String newUsername = JOptionPane.showInputDialog(frame, "New username:");
             String newPassword = JOptionPane.showInputDialog(frame, "New password:");
-            String[] roles = {"admin", "participant", "organizer"};
+            String[] roles = {"admin", "participant", "organiser"};
             String newRole = (String) JOptionPane.showInputDialog(frame, "Select role:", "User Role", JOptionPane.PLAIN_MESSAGE, null, roles, roles[0]);
 
             if (newUsername == null || newUsername.trim().isEmpty() ||
@@ -114,7 +114,7 @@ public class LoginGUI {
             );
 
             if (uname != null) {
-                String[] roles = {"admin", "participant", "organizer"};
+                String[] roles = {"admin", "participant", "organiser"};
                 String newRole = (String) JOptionPane.showInputDialog(frame, "Select new role:", "Edit User Role", JOptionPane.PLAIN_MESSAGE, null, roles, roles[0]);
                 String newPassword = JOptionPane.showInputDialog(frame, "New password:");
 
@@ -159,7 +159,7 @@ public class LoginGUI {
         frame.setVisible(true);
     }
 
-    private void showParticipantDashboard(String username) {
+    private void showParticipantDashboard(String username, String role, String Password) {
         JFrame frame = new JFrame("Participant Dashboard - " + username);
         frame.setSize(300, 200);
         frame.setLayout(null);
@@ -179,24 +179,8 @@ public class LoginGUI {
         frame.setVisible(true);
     }
 
-    private void showOrganizerDashboard(String username) {
-        JFrame frame = new JFrame("Organizer Dashboard - " + username);
-        frame.setSize(300, 200);
-        frame.setLayout(null);
-
-        JLabel label = new JLabel("Welcome, Organizer!");
-        label.setBounds(80, 30, 200, 30);
-        frame.add(label);
-
-        JButton logoutBtn = new JButton("Logout");
-        logoutBtn.setBounds(100, 100, 100, 30);
-        logoutBtn.addActionListener(e -> {
-            frame.dispose();
-            new LoginGUI();
-        });
-        frame.add(logoutBtn);
-
-        frame.setVisible(true);
+    private void showOrganiserDashboard(String username, String role, String Password) {
+        new OrganiserUI(new User(username, Password, role));
     }
 
     public static void main(String[] args) {
