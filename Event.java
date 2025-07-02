@@ -8,12 +8,13 @@ public class Event {
     private LocalDateTime date; // uses yyyy-MM-ddTHH:mm:ss format // 2025-06-27T14:30:00 // T is just a separator char to separate date adn time
     private int capacity;
     private byte[] pictureData;
-    //private int totalRegistered; // not sure if this needed, check with registration class
+    private int totalRegistered; // not sure if this needed, check with registration class
     private double registerationFee;
     private EventType eventType;
     private EnumMap<AdditionalServices, Double> availableAdditionalServices = new EnumMap<>(AdditionalServices.class); // (service,cost)
     private EnumMap<DiscountType, Double> availableDiscounts = new EnumMap<>(DiscountType.class); // (discoun type, cost) // allow user to set how much it will minus the price or allow them to set a % which will be a hardcoded calculation then set into params
-
+    private String organiser;
+    
     public Event(String eventName, String venue, LocalDateTime date, int capacity, double registrationFee, EventType eventType) {
        
         this.eventName = eventName;
@@ -22,6 +23,7 @@ public class Event {
         this.capacity = capacity;
         this.registerationFee = registrationFee;
         this.eventType = eventType;
+        this.totalRegistered = 0;
     }
 
     
@@ -91,6 +93,14 @@ public class Event {
         this.pictureData = pictureData;
     }
 
+    public void setTotalRegistered(int totalRegistered) {
+        this.totalRegistered = totalRegistered;
+    }
+
+    public int getTotalRegistered() {
+        return totalRegistered;
+    }
+
     // ----- additional services -----
 
     public EnumMap<AdditionalServices, Double> getAvailableAdditionalServices() {
@@ -133,6 +143,15 @@ public class Event {
 
     public double getDiscountValue(DiscountType discountType) {
         return this.availableDiscounts.getOrDefault(discountType, 0.0);
+    }
+
+    // ----- Organised by ------
+    public void setOrganiser(String organiser) {
+        this.organiser = organiser;
+    }
+
+    public String getOrganiser() {
+        return organiser;
     }
 
 }

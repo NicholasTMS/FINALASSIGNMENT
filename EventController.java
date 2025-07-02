@@ -1,6 +1,8 @@
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.EnumMap;
+import java.util.List;
 
 public class EventController {
     private Event model;
@@ -36,6 +38,16 @@ public class EventController {
             System.out.println("Inserted event with ID = " + model.getEventID());
         } catch (SQLException ex) {
             ex.printStackTrace();
+        }
+    }
+
+    public List<Event> loadAllEvents() {
+        try {
+            return dao.loadAllEvents();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // You could also bubble up a custom exception or return empty list
+            return Collections.emptyList();
         }
     }
 }
