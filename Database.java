@@ -1,5 +1,6 @@
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -12,7 +13,7 @@ public class Database {
             if (conn != null) {
                 conn.createStatement().execute("PRAGMA foreign_keys = ON;");
                 createEventTable(conn);
-                //createUserTable(conn);
+                createUserTable(conn);
                 //createRegistrationTable(conn);
                 System.out.println("✅ All tables created (if not exist).");
             }
@@ -29,8 +30,11 @@ public class Database {
                 venue TEXT NOT NULL,
                 datetime TEXT NOT NULL,
                 capacity INTEGER NOT NULL,
+                totalRegistered INTEGER NOT NULL,
                 registrationFee REAL NOT NULL,
-                eventType TEXT NOT NULL
+                eventType TEXT NOT NULL,
+                picture BLOB,
+                organiser TEXT NOT NULL
             );
         """;
 
@@ -63,17 +67,53 @@ public class Database {
 
 
     private static void createUserTable(Connection conn) throws SQLException {
-        String sql = """
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                email TEXT NOT NULL UNIQUE
+        
+        String userTable = """
+            CREATE TABLE IF NOT EXISTS Users (
+                id       INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT    NOT NULL UNIQUE,
+                password TEXT    NOT NULL,
+                role     TEXT    NOT NULL
             );
         """;
         try (Statement stmt = conn.createStatement()) {
-            stmt.execute(sql);
+            stmt.execute(userTable);
+        }
+
+        String insertOrganiser = """
+            INSERT OR IGNORE INTO Users(username, password, role)
+            VALUES (?, ?, ?)
+        """;
+        try (PreparedStatement ps = conn.prepareStatement(insertOrganiser)) {
+            ps.setString(1, "OrganiserGuest");
+            ps.setString(2, "12345");
+            ps.setString(3, "Organiser");
+            ps.executeUpdate();
+        }
+
+        String insertAdmin = """
+            INSERT OR IGNORE INTO Users(username, password, role)
+            VALUES (?, ?, ?)
+        """;
+        try (PreparedStatement ps = conn.prepareStatement(insertAdmin)) {
+            ps.setString(1, "AdminGuest");
+            ps.setString(2, "12345");
+            ps.setString(3, "Admin");
+            ps.executeUpdate();
+        }
+
+        String insertParticipant = """
+            INSERT OR IGNORE INTO Users(username, password, role)
+            VALUES (?, ?, ?)
+        """;
+        try (PreparedStatement ps = conn.prepareStatement(insertParticipant)) {
+            ps.setString(1, "ParticipantGuest");
+            ps.setString(2, "12345");
+            ps.setString(3, "Participant");
+            ps.executeUpdate();
         }
     }
+
 
     private static void createRegistrationTable(Connection conn) throws SQLException {
         String sql = """
