@@ -35,13 +35,13 @@ public class EventController implements Subject {
         double fee, EventType type,
         EnumMap<AdditionalServices, Double> services,
         EnumMap<DiscountType, Double> discounts,
-        byte[] pictureData
+        byte[] pictureData, String organiserName
     ) {
         model = new Event(name, venue, date, capacity, fee, type);
         model.setAvailableAdditionalServices(services);
         model.setAvailableDiscounts(discounts);
         model.setPictureData(pictureData);
-
+        model.setOrganiser(organiserName);
         try {
             dao.insert(model);
         } catch (SQLException ex) {
@@ -85,9 +85,9 @@ public class EventController implements Subject {
         notifyObservers();
     }
 
-    public List<Event> loadAllEvents() {
+    public List<Event> loadAllEventsForOrganiser(String username) {
         try {
-            return dao.loadAllEvents();
+            return dao.loadAllEventsForOrganiser(username);
         } catch (SQLException ex) {
             ex.printStackTrace();
             return Collections.emptyList();

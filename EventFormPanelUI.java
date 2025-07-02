@@ -11,6 +11,7 @@ import java.util.EnumMap;
 
 public class EventFormPanelUI extends JPanel {
     private final EventController controller;
+    private final User organiser;
 
     // form fields
     private JTextField nameField, venueField, dateField, timeField, capacityField, feeField;
@@ -29,8 +30,9 @@ public class EventFormPanelUI extends JPanel {
     private JTextArea outputArea;
     private Event  editingEvent;    // null = create new, non-null = editing
 
-    public EventFormPanelUI(EventController controller) {
+    public EventFormPanelUI(EventController controller, User organiser) {
         this.controller = controller;
+        this.organiser = organiser;
         setLayout(new BorderLayout());
         buildForm();
     }
@@ -159,7 +161,7 @@ public class EventFormPanelUI extends JPanel {
                 // create new
                 controller.createEvent(
                   name, venue, dt, capacity, fee, type,
-                  services, discounts, uploadedPictureData
+                  services, discounts, uploadedPictureData, this.organiser.getUsername()
                 );
             } else {
                 // update existing

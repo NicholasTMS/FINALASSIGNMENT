@@ -72,7 +72,7 @@ public class Database {
             CREATE TABLE IF NOT EXISTS Users (
                 id       INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT    NOT NULL UNIQUE,
-                password TEXT    NOT NULL,
+                hashedpassword TEXT    NOT NULL,
                 role     TEXT    NOT NULL
             );
         """;
@@ -81,35 +81,38 @@ public class Database {
         }
 
         String insertOrganiser = """
-            INSERT OR IGNORE INTO Users(username, password, role)
+            INSERT OR IGNORE INTO Users(username, hashedpassword, role)
             VALUES (?, ?, ?)
         """;
         try (PreparedStatement ps = conn.prepareStatement(insertOrganiser)) {
+            String pass = PasswordUtil.hashPassword("12345");
             ps.setString(1, "OrganiserGuest");
-            ps.setString(2, "12345");
-            ps.setString(3, "Organiser");
+            ps.setString(2, pass);
+            ps.setString(3, "organiser");
             ps.executeUpdate();
         }
 
         String insertAdmin = """
-            INSERT OR IGNORE INTO Users(username, password, role)
+            INSERT OR IGNORE INTO Users(username, hashedpassword, role)
             VALUES (?, ?, ?)
         """;
         try (PreparedStatement ps = conn.prepareStatement(insertAdmin)) {
+            String pass = PasswordUtil.hashPassword("12345");
             ps.setString(1, "AdminGuest");
-            ps.setString(2, "12345");
-            ps.setString(3, "Admin");
+            ps.setString(2, pass);
+            ps.setString(3, "admin");
             ps.executeUpdate();
         }
 
         String insertParticipant = """
-            INSERT OR IGNORE INTO Users(username, password, role)
+            INSERT OR IGNORE INTO Users(username, hashedpassword, role)
             VALUES (?, ?, ?)
         """;
         try (PreparedStatement ps = conn.prepareStatement(insertParticipant)) {
+             String pass = PasswordUtil.hashPassword("12345");
             ps.setString(1, "ParticipantGuest");
-            ps.setString(2, "12345");
-            ps.setString(3, "Participant");
+            ps.setString(2, pass);
+            ps.setString(3, "participant");
             ps.executeUpdate();
         }
     }

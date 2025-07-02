@@ -1,11 +1,12 @@
-public class Organiser {
+
+public class User {
     private String username;
     private String hashedPassword;
     private String role;
 
-    public Organiser(String username, String role) {
+    public User(String username, String Password, String role) {
         this.username = username;
-        //this.hashedPassword = hashedPassword;
+        this.hashedPassword = PasswordUtil.hashPassword(Password);
         this.role = role;
     }
 
@@ -20,12 +21,17 @@ public class Organiser {
     public String getRole() {
         return role;
     }
+    
+    public void setPassword(String newPassword) {
 
-    public void setPassword(String newHashedPassword) {
-        this.hashedPassword = newHashedPassword;
+        this.hashedPassword = PasswordUtil.hashPassword(newPassword);
     }
 
     public void setRole(String newRole) {
         this.role = newRole;
+    }
+
+    public boolean validatePassword(String password) {
+        return PasswordUtil.verifyPassword(password, hashedPassword);
     }
 }
