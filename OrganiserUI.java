@@ -42,18 +42,23 @@ public class OrganiserUI extends JFrame {
 
         // Create each page as its own panel
         // create page panel styling
-        JPanel createPage       = new JPanel(new BorderLayout()); 
-        // header
+        JPanel createPage = new JPanel(new BorderLayout()); 
         JLabel header = new JLabel("Create Event Form", SwingConstants.CENTER);
         header.setFont(header.getFont().deriveFont(Font.BOLD, 24f));createPage.add(createPanel); 
-        
-        // add elements to the panel
         createPage.add(header,      BorderLayout.NORTH);
         createPage.add(createPanel, BorderLayout.CENTER);
         
         
-        // other pages
-        JPanel updatePage       = new JPanel();                   updatePage.add(new JLabel("Update Event Page"));
+        // Update page styling
+        JPanel updatePage = new JPanel(new BorderLayout());
+        JLabel updHeader = new JLabel("Update Events", SwingConstants.CENTER);
+        updHeader.setFont(updHeader.getFont().deriveFont(Font.BOLD, 20f));
+        updatePage.add(updHeader, BorderLayout.NORTH);
+        updatePage.add(createScrollableEventGrid(), BorderLayout.CENTER);
+                           
+
+
+        // othe rpage styling
         JPanel deletePage       = new JPanel();                   deletePage.add(new JLabel("Delete Event Page"));
         JPanel notificationsPage= new JPanel();                   notificationsPage.add(new JLabel("Notifications Page"));
 
@@ -79,23 +84,24 @@ public class OrganiserUI extends JFrame {
     
 
     private JScrollPane createScrollableEventGrid() {
-        //fetch events; replace with your real DAO call
         List<Event> events = controller.loadAllEvents();
 
-        // grid: 0 rows, 4 columns
-        JPanel grid = new JPanel(new GridLayout(0, 4, 10, 10));
-        grid.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        // Use FlowLayout so cards keep their preferred size
+        JPanel grid = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        grid.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
 
-        // one card per event
         for (Event ev : events) {
-            grid.add(new EventCard(ev));
+            EventCard card = new EventCard(ev);
+            card.setPreferredSize(new Dimension(200,200));
+            grid.add(card);
         }
 
-        // wrap in scroll pane
         JScrollPane scroll = new JScrollPane(grid);
         scroll.getVerticalScrollBar().setUnitIncrement(16);
         return scroll;
     }
+
+
 
     /**
      * Inner class: a single “card” showing picture + name, clickable to show details.
@@ -104,7 +110,7 @@ public class OrganiserUI extends JFrame {
         EventCard(Event event) {
             setLayout(new BorderLayout(5,5));
             setBorder(BorderFactory.createLineBorder(Color.GRAY));
-            setPreferredSize(new Dimension(200, 200));
+            setPreferredSize(new Dimension(20, 40));
 
             // Thumbnail
             byte[] img = event.getPictureData();
@@ -137,7 +143,7 @@ public class OrganiserUI extends JFrame {
         String message =
             "Name: " + e.getEventName() + "\n" +
             "Venue: " + e.getVenue() + "\n" +
-            "Date:  " + e.getDate() + "\n" +
+            "DateTime:  " + e.getDate() + "\n" +
             "Fee:   RM" + e.getRegisterationFee();
         JOptionPane.showMessageDialog(
             this,
