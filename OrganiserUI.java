@@ -24,6 +24,8 @@ public class OrganiserUI extends BaseUI implements Observer {
         addCard("VIEW_MODIFY", viewModifyPage);
         addCard("NOTIFY", buildNotifyPage());
 
+        btnMyEvents.setVisible(false);
+        
         registerNavActions(Map.of(
             "CREATE", () -> showCard("CREATE_UPDATE"),
             "VIEW",   () -> showCard("VIEW_MODIFY"),
@@ -136,41 +138,6 @@ public class OrganiserUI extends BaseUI implements Observer {
             });
         }
     }
-
-    private void showEventDetails(Event e) {
-        StringBuilder sb = new StringBuilder()
-            .append("Event ID: ").append(e.getEventID()).append("\n")
-            .append("Name: ").append(e.getEventName()).append("\n")
-            .append("Venue: ").append(e.getVenue()).append("\n")
-            .append("Date‑Time: ").append(e.getDate()).append("\n")
-            .append("Capacity: ").append(e.getCapacity()).append("\n")
-            .append("Registered: ").append(e.getTotalRegistered()).append("\n")
-            .append("Base Fee: RM").append(e.getRegisterationFee()).append("\n")
-            .append("Type: ").append(e.getEventType()).append("\n")
-            .append("Organiser: ").append(e.getOrganiser()).append("\n");
-
-        if (!e.getAvailableAdditionalServices().isEmpty()) {
-            sb.append("Additional Services:\n");
-            e.getAvailableAdditionalServices().forEach((s, c) ->
-              sb.append(" • ").append(s).append(": RM").append(c).append("\n")
-            );
-            sb.append("\n");
-        }
-        if (!e.getAvailableDiscounts().isEmpty()) {
-            sb.append("Discounts:\n");
-            e.getAvailableDiscounts().forEach((d,v) ->
-              sb.append(" • ").append(d).append(": -RM").append(v).append("\n")
-            );
-        }
-
-        JOptionPane.showMessageDialog(
-          this, sb.toString(),
-          "Details for “" + e.getEventName() + "”",
-          JOptionPane.INFORMATION_MESSAGE
-        );
-    }
-
-    
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {

@@ -101,6 +101,15 @@ public class EventController implements Subject {
             return Collections.emptyList();
         }
     }
+
+    public Event loadEventById(String eventId) {
+        try {
+            return new EventDAO().loadById(eventId);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }
 
 
