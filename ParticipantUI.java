@@ -250,14 +250,18 @@ public class ParticipantUI extends BaseUI implements Observer {
                 JPanel panel = new JPanel(new BorderLayout());
                 panel.setBorder(BorderFactory.createTitledBorder(ev.getEventName()));
 
-                String info = "<html>" +
+               String info = "<html>" +
                     "Venue: " + ev.getVenue() + "<br>" +
                     "Date: " + ev.getDate() + "<br>" +
-                    "Tickets: " + reg.getTickets() + "<br>" +
-                    "Service Cost: RM " + String.format("%.2f", reg.getServicesCost()) + "<br>" +
-                    "Discount Applied: -RM " + String.format("%.2f", reg.getDiscountAmount()) + "<br>" +
-                    "<b>Total Paid: RM " + String.format("%.2f", reg.getTotalPrice()) + "</b>" +
+                    "Tickets: " + reg.getTickets() +
                     "</html>";
+
+                panel.add(new JLabel(info), BorderLayout.CENTER);
+
+                JButton btnBill = new JButton("View Bill");
+                btnBill.addActionListener(e -> showBillDialog(ev, reg));
+                panel.add(btnBill, BorderLayout.EAST); // or SOUTH if you prefer full width
+
 
                 panel.add(new JLabel(info), BorderLayout.CENTER);
                 grid.add(panel);
@@ -311,6 +315,33 @@ public class ParticipantUI extends BaseUI implements Observer {
                 showCard("REGISTER");
             });
         }
+    }
+
+    private void showBillDialog(Event ev, Registration reg) {
+        double baseFee = ev.getRegisterationFee();
+        int tickets = reg.getTickets();
+        double totalServiceCost = reg.getServicesCost();
+        double totalDiscount = reg.getDiscountAmount();
+        double totalBeforeDiscount = (baseFee * tickets) + totalServiceCost;
+        double netPayable = reg.getTotalPrice();
+
+        String message = String.format("""
+            <html><body>
+            <h2>Billing Summary</h2>
+            Base Fee per Ticket: RM %.2f<br>
+            Number of Tickets: %d<br>
+            Total Base Fee: RM %.2f<br>
+            Additional Services: RM %.2f<br>
+            <b>Total Before Discount: RM %.2f</b><br><br>
+            Discount Applied: -RM %.2f<br>
+            <b>Amount Payable: RM %.2f</b>
+            </body></html>
+            """, baseFee, tickets, baseFee * tickets,
+            totalServiceCost, totalBeforeDiscount,
+            totalDiscount, netPayable
+        );
+
+        JOptionPane.showMessageDialog(this, message, "Detailed Bill", JOptionPane.INFORMATION_MESSAGE);
     }
 }
 
