@@ -14,7 +14,7 @@ public class Database {
                 conn.createStatement().execute("PRAGMA foreign_keys = ON;");
                 createEventTable(conn);
                 createUserTable(conn);
-                //createRegistrationTable(conn);
+                createRegistrationTable(conn);
                 System.out.println("✅ All tables created (if not exist).");
             }
         } catch (SQLException e) {
@@ -120,12 +120,17 @@ public class Database {
 
     private static void createRegistrationTable(Connection conn) throws SQLException {
         String sql = """
-            CREATE TABLE IF NOT EXISTS registrations (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                event_id INTEGER,
-                user_id INTEGER,
-                FOREIGN KEY(event_id) REFERENCES events(id),
-                FOREIGN KEY(user_id) REFERENCES users(id)
+            CREATE TABLE IF NOT EXISTS Registration (
+            id               INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_id         INTEGER NOT NULL,
+            user_id          INTEGER NOT NULL,
+            tickets          INTEGER NOT NULL,
+            servicesCost     REAL    NOT NULL,
+            discountAmount   REAL    NOT NULL,
+            totalPrice       REAL    NOT NULL,
+            registeredAt     TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(event_id)     REFERENCES Event(id) ON DELETE CASCADE,
+            FOREIGN KEY(user_id)      REFERENCES Users(id) ON DELETE CASCADE
             );
         """;
         try (Statement stmt = conn.createStatement()) {

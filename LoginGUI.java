@@ -1,4 +1,5 @@
 
+import javax.naming.PartialResultException;
 import javax.swing.*;
 import java.util.List;
 
@@ -160,23 +161,7 @@ public class LoginGUI {
     }
 
     private void showParticipantDashboard(String username, String role, String Password) {
-        JFrame frame = new JFrame("Participant Dashboard - " + username);
-        frame.setSize(300, 200);
-        frame.setLayout(null);
-
-        JLabel label = new JLabel("Welcome, Participant!");
-        label.setBounds(80, 30, 200, 30);
-        frame.add(label);
-
-        JButton logoutBtn = new JButton("Logout");
-        logoutBtn.setBounds(100, 100, 100, 30);
-        logoutBtn.addActionListener(e -> {
-            frame.dispose();
-            new LoginGUI();
-        });
-        frame.add(logoutBtn);
-
-        frame.setVisible(true);
+        new ParticipantUI(new User(username, Password, role));
     }
 
     private void showOrganiserDashboard(String username, String role, String Password) {

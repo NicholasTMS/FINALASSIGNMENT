@@ -145,6 +145,39 @@ public class EventDAO {
         }
     }
 
+    public Event loadById(String id) throws SQLException {
+        String sql = """
+        SELECT id, name, venue, datetime, capacity,
+                totalRegistered, registrationFee, eventType, picture, organiser
+            FROM Event
+        WHERE id = ?
+        """;
+        try (Connection conn = DriverManager.getConnection(URL);
+            PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return null;
+                Event e = new Event(
+                    rs.getString("name"),
+                    rs.getString("venue"),
+                    LocalDateTime.parse(rs.getString("datetime")),
+                    rs.getInt("capacity"),
+                    rs.getDouble("registrationFee"),
+                    EventType.valueOf(rs.getString("eventType"))
+                );
+                e.setEventID(String.valueOf(id));
+                e.setTotalRegistered(rs.getInt("totalRegistered"));
+                e.setPictureData(rs.getBytes("picture"));
+                e.setOrganiser(rs.getString("organiser"));
+                int idInt = Integer.parseInt(id);
+                e.setAvailableAdditionalServices(loadServicesForEvent(idInt, conn));
+                e.setAvailableDiscounts(loadDiscountsForEvent(idInt, conn));
+                return e;
+            }
+        }
+    }
+
+
     /** Loads *all* events, fully populated with services & discounts. */
     public List<Event> loadAllEvents() throws SQLException {
         List<Event> events = new ArrayList<>();
@@ -227,10 +260,10 @@ public class EventDAO {
     //----helper for laoding servies and discounts
 
     private EnumMap<AdditionalServices, Double> loadServicesForEvent(int eventId, Connection conn)
-            throws SQLException {
+        throws SQLException {
         EnumMap<AdditionalServices, Double> map = new EnumMap<>(AdditionalServices.class);
-        try (PreparedStatement ps = conn.prepareStatement(
-                 "SELECT service, cost FROM EventAdditionalServices WHERE event_id=?")) {
+        String sql = "SELECT service, cost FROM EventAdditionalServices WHERE event_id=?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, eventId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -242,11 +275,12 @@ public class EventDAO {
         return map;
     }
 
+
     private EnumMap<DiscountType, Double> loadDiscountsForEvent(int eventId, Connection conn)
-            throws SQLException {
+        throws SQLException {
         EnumMap<DiscountType, Double> map = new EnumMap<>(DiscountType.class);
-        try (PreparedStatement ps = conn.prepareStatement(
-                 "SELECT discountType, value FROM EventDiscounts WHERE event_id=?")) {
+        String sql = "SELECT discountType, value FROM EventDiscounts WHERE event_id=?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, eventId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -257,6 +291,7 @@ public class EventDAO {
         }
         return map;
     }
+
 }
 
 

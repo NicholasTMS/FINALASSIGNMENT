@@ -85,12 +85,29 @@ public class EventController implements Subject {
         notifyObservers();
     }
 
+    public List<Event> loadAllEvents() {
+        try {
+            return dao.loadAllEvents();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
     public List<Event> loadAllEventsForOrganiser(String username) {
         try {
             return dao.loadAllEventsForOrganiser(username);
         } catch (SQLException ex) {
             ex.printStackTrace();
             return Collections.emptyList();
+        }
+    }
+
+    public Event loadEventById(String eventId) {
+        try {
+            return new EventDAO().loadById(eventId);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 }
